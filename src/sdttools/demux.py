@@ -13,7 +13,7 @@ extmap: Dict[int, str] = {
     0x00000002: ".dmx",    # this container was found on Zone of the Enders HD Remaster
 	0x00000003: ".nrm",
     0x00000004: ".pacb",   # has "PACB" magic not seen in any of the original versions the HD remaster was based on
-    0x00000005: ".dmx",    # ditto
+    0x00000005: ".dmx2",    # ditto
     0x00000006: ".bpx",    
     0x0000000c: ".pac",    # XBOX version of MGS2 - MPEG2 video format
     0x0000000d: ".pac",    # XBOX version of MGS2 - MPEG2 video format
