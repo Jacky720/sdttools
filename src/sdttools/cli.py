@@ -89,6 +89,12 @@ def main() -> None:
         subs: Optional[str] = None
         other: list[str] = []
 
+        # Folder repack
+        if len(inputs) == 1 and os.path.isdir(inputs[0]):
+            input_dir = inputs[0]
+            inputs = os.listdir(input_dir)
+            inputs = [os.path.join(input_dir, i) for i in inputs]
+
         # Identify input streams based on file extensions
         for i in inputs:
 
