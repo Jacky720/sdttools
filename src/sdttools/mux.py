@@ -157,7 +157,7 @@ def mux(
                 elif size < 0:
                     if rid == parammap[".dmx"]:
                         # Variable-length chunks, because dmx is also an sdt
-                        end_pos = os.path.getsize(sdt_path)
+                        end_pos = os.path.getsize(inpath)
                         i: int = 0
                         while f.tell() < end_pos:
                             header: bytes = f.read(0x10)
