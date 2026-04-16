@@ -61,6 +61,8 @@ def demux_sdt(sdt_path: PathType, out_dir: PathType) -> None:
             # Each SDT record begins with a 16-byte header
             header: bytes = sdt.read(16)
             rid: int = get_u32_le(header, 0)
+            param: int = get_u32_le(header, 0xc)
+            print(extmap.get(rid) or hex(rid), hex(get_u32_le(header, 4)), hex(get_u32_le(header, 8)), hex(param) if rid != 0x10 else extmap.get(param))
 
             # 0xF0 marks the end of the SDT stream table
             if rid == 0xF0:
