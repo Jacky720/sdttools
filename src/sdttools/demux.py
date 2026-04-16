@@ -98,16 +98,20 @@ def demux_sdt(sdt_path: PathType, out_dir: PathType) -> None:
 
                 # Some files (xwma) have non-rounded chunk sizes
                 # If the data size is set, trim to that
-                read_size: int = get_u32_le(header, 4) - 16
-                data_size: int = get_u32_le(header, 0xC)
+                read_size: int = get_u32_le(header, 0x4) - 16
+                data_size: int = read_size
                 
-                if data_size == 0:
-                    data_size = read_size
-                    if streams[rid].tell() != 0:
-                        # Some files (mtaf) have padding chunks (never first).
-                        # Don't write those.
+                # Special cases
+                if rid == 0x00040001:  # .xwma (non-round block)
+                    data_size = get_u32_le(header, 0xC)
+                    if data_size == 0:
+                        data_size = read_size
+                
+                if rid == 0x00110001:  # .mtaf (padding block)
+                    if streams[rid].tell() != 0 and data_size == 0:
                         _ = sdt.read(read_size)
                         continue
+                
                 streams[rid].write(sdt.read(read_size)[:data_size])
 
             else:
