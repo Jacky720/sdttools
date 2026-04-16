@@ -77,6 +77,8 @@ def main() -> None:
 
         if outputs == ["all"]:
             sdt.extract_all()
+        elif len(outputs) == 1 and os.path.isdir(outputs[0]):
+            sdt.extract_all(outputs[0])
         else:
             sdt.extract(outputs)
 
@@ -85,13 +87,14 @@ def main() -> None:
         video: Optional[str] = None
         audio: Optional[str] = None
         subs: Optional[str] = None
+        other: list[str] = []
 
         # Identify input streams based on file extensions
         for i in inputs:
 
             ext = os.path.splitext(i)[1].lower()
 
-            if ext in [".m2v", ".mp4"]:
+            if ext in {".m2v", ".mp4"}:
 
                 if video:
                     print(
@@ -109,7 +112,7 @@ def main() -> None:
                         "Use MPEG-2 .m2v for PS3 HD versions."
                     )
 
-            elif ext == ".mtaf":
+            elif ext in {".mtaf", ".xwma"}:
 
                 if audio:
                     print(
@@ -130,10 +133,15 @@ def main() -> None:
                     subs = i
 
             else:
-                sys.exit(f"Unsupported input file: {i}")
+                other.append(i)
 
         # Validate input files before attempting to mux
-        for f in (video, audio, subs):
+        checked_inputs = other
+        if video: checked_inputs.append(video)
+        if audio: checked_inputs.append(audio)
+        if subs: checked_inputs.append(subs)
+
+        for f in checked_inputs:
             if f and not os.path.exists(f):
                 sys.exit(f"Error: Input file not found: {f}")
 
@@ -147,6 +155,6 @@ def main() -> None:
 
             out_sdt = outputs[0]
 
-        create_sdt(out_sdt, video, audio, subs)
+        create_sdt(out_sdt, checked_inputs)
 
         print("Created:", out_sdt)

@@ -96,8 +96,19 @@ def demux_sdt(sdt_path: PathType, out_dir: PathType) -> None:
             # Data record for an already registered stream
             elif rid in streams:
 
-                size: int = get_u32_le(header, 4) - 16
-                streams[rid].write(sdt.read(size))
+                # Some files (xwma) have non-rounded chunk sizes
+                # If the data size is set, trim to that
+                read_size: int = get_u32_le(header, 4) - 16
+                data_size: int = get_u32_le(header, 0xC)
+                
+                if data_size == 0:
+                    data_size = read_size
+                    if streams[rid].tell() != 0:
+                        # Some files (mtaf) have padding chunks (never first).
+                        # Don't write those.
+                        _ = sdt.read(read_size)
+                        continue
+                streams[rid].write(sdt.read(read_size)[:data_size])
 
             else:
                 raise RuntimeError("unknown header ID")

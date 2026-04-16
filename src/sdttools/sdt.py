@@ -94,24 +94,18 @@ class SDT:
 
 def create_sdt(
     output: PathType,
-    m2v: Optional[PathType] = None,
-    mtaf: Optional[PathType] = None,
-    pacb: Optional[PathType] = None
+    inputs: list[PathType]
 ) -> None:
     """
     Create an SDT file by muxing the given input streams.
 
     Args:
         output (PathType): Path to the output SDT file.
-        m2v (Optional[PathType]): Path to the video stream (.m2v or .mp4).
-        mtaf (Optional[PathType]): Path to the audio stream (.mtaf).
-        pacb (Optional[PathType]): Path to the subtitle stream (.pacb).
+        inputs (list[PathType]): Paths to input files to mux.
     """
 
     # Convert PathLike inputs to strings before passing to mux()
     mux(
         os.fspath(output),
-        os.fspath(pacb) if pacb else None,
-        os.fspath(m2v) if m2v else None,
-        os.fspath(mtaf) if mtaf else None
+        [os.fspath(infile) for infile in inputs]
     )
