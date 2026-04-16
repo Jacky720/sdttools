@@ -9,11 +9,10 @@ from .demux import extmap
 
 parammap = {v: k for k, v in extmap.items()}
 parammap[".mp4"] = parammap[".m2v"]
-parammap[".dmx"] = 0x00000005  # multiple dmx entries in extmap, ensure consistency
 
 INIT = 0  # Initialize stream
 HEAD = 1  # Header chunk
-DATA = 2  # Other chunks
+DATA = 2  # Other chunks, loop by block size
 # (rid, type_to_write, amt_to_write)
 # -1 gets substituted on header read when appropriate
 # 0 for all in one chunk
@@ -26,9 +25,11 @@ expected_order: list[tuple[int, int, int]] = [
     (parammap[".mtaf"], DATA, 0x3FC0),
     (parammap[".xwma"], INIT, 0),
     (parammap[".xwma"], HEAD, -1),
+    (parammap[".dmx"],  INIT, 0),
+    (parammap[".dmx"],  DATA, -1),
     (parammap[".xwma"], DATA, -1),
     (parammap[".m2v"],  DATA, 0x10000),
-    (parammap[".dmx"],  INIT, 0),
+    (parammap[".dmx2"], INIT, 0),
     (0x00010006,        INIT, 0),
     (0x00030006,        INIT, 0),
     (0x00020006,        INIT, 0),
@@ -41,7 +42,7 @@ expected_order: list[tuple[int, int, int]] = [
     (0x00040006,        DATA, 0),
     (0x00050006,        DATA, 0),
     (0x00070006,        DATA, 0),
-    (parammap[".dmx"],  DATA, -1),
+    (parammap[".dmx2"], DATA, -1),
 ]
 
 
@@ -65,12 +66,6 @@ def write_record(
 
     # Each SDT record begins with a 16-byte header
     size = 16 + len(payload)
-    # Each record is padded, specifying the actual size if necessary
-    while size % 0x10 != 0:
-        if param == 0:
-            param = size
-        size += 1
-        payload += b"\0"
     
     f.write(struct.pack("<IIII", rid, size, unk, param))
     f.write(payload)
@@ -83,6 +78,7 @@ def rid_from_path(inpath: str) -> int:
     Args:
         inpath (str): The file name to check.
     """
+    inpath = inpath.lower()
     if os.path.splitext(inpath)[1] in parammap:
         return parammap[os.path.splitext(inpath)[1]]
     if inpath.endswith(".bin") and all(c in hexdigits for c in inpath[-12:-4]):
@@ -136,7 +132,12 @@ def mux(
                         with open(inpath, "rb") as f:
                             header: bytes = f.read(0x40)
                             size = get_u32_le(header, 0x18)
-                elif rid == parammap[".dmx"]:
+                        # Compute padded size
+                        padding_data: bytes = b""
+                        if size % 0x10 != 0:
+                            padding_data = b"\0" * (0x10 - (size % 0x10))
+
+                elif rid in {parammap[".dmx"], parammap[".dmx2"]}:
                     # DATA handled in all-entries loop
                     pass
                 else:
@@ -150,12 +151,15 @@ def mux(
                     write_record(out, rid, f.read())
                 elif size > 0:
                     if mode == HEAD:
-                        write_record(out, rid, f.read(size), 0, size if size % 0x10 != 0 else 0)
+                        write_record(out, rid, f.read(size))
                     elif mode == DATA:
                         for chunk in iter(lambda: f.read(size), b""):
-                            write_record(out, rid, chunk, 0, size if size % 0x10 != 0 else 0)
+                            if rid == parammap[".xwma"]:
+                                write_record(out, rid, chunk + padding_data, 0, size)
+                            else:
+                                write_record(out, rid, chunk)
                 elif size < 0:
-                    if rid == parammap[".dmx"]:
+                    if rid == parammap[".dmx2"]:
                         # Variable-length chunks, because dmx is also an sdt
                         end_pos = os.path.getsize(inpath)
                         i: int = 0
@@ -165,6 +169,23 @@ def mux(
                             entry: bytes = f.read(size - 0x10)
                             write_record(out, rid, header + entry, i)
                             i += 0x6
+                    elif rid == parammap[".dmx"]:
+                        # Combine chunks until empty
+                        end_pos = os.path.getsize(inpath)
+                        i: int = 0
+                        data: bytes = b""
+                        while f.tell() < end_pos:
+                            header: bytes = f.read(0x10)
+                            size = get_u32_le(header, 0x04)
+                            data += header
+                            # Read through until a dummy record
+                            if size <= 0x10:
+                                # Submit
+                                write_record(out, rid, data, i)
+                                data = b""
+                                i += 0x5
+                            else:
+                                data += f.read(size - 0x10)
                     else:
                         print("Invalid SDT chunk order configuration")
                 read_amts[inpath] = f.tell()
