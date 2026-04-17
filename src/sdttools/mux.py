@@ -25,9 +25,9 @@ expected_order: list[tuple[int, int, int]] = [
     (parammap[".mtaf"], DATA, 0x3FC0),
     (parammap[".xwma"], INIT, 0),
     (parammap[".xwma"], HEAD, -1),
+    (parammap[".xwma"], DATA, -1),
     (parammap[".dmx"],  INIT, 0),
     (parammap[".dmx"],  DATA, -1),
-    (parammap[".xwma"], DATA, -1),
     (parammap[".m2v"],  DATA, 0x10000),
     (parammap[".dmx2"], INIT, 0),
     (0x00010006,        INIT, 0),
@@ -180,6 +180,9 @@ def mux(
                             data += header
                             # Read through until a dummy record
                             if size <= 0x10:
+                                if end_pos - f.tell() == 0x10:
+                                    # Special case - last one is rolled in too
+                                    data += f.read(0x10)
                                 # Submit
                                 write_record(out, rid, data, i)
                                 data = b""
