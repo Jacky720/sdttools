@@ -17,8 +17,8 @@ DATA = 2  # Other chunks, loop by block size
 # -1 gets substituted on header read when appropriate
 # 0 for all in one chunk
 expected_order: list[tuple[int, int, int]] = [
-    (parammap[".pacb"], INIT, 0),
-    (parammap[".pacb"], DATA, 0),
+    (parammap[".cap"],  INIT, 0),
+    (parammap[".cap"],  DATA, 0),
     (parammap[".m2v"],  INIT, 0),
     (parammap[".mtaf"], INIT, 0),
     (parammap[".mtaf"], HEAD, 0x800),
