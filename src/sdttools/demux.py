@@ -9,30 +9,30 @@ STREAM_ID_ADPCM: int = 1
 
 
 extmap: Dict[int, str] = {
-    0x00000001: ".genh",   # ADPCM -> GENH / ".sdx_0"
+    0x00000001: ".pcm",    # ADPCM -> GENH / ".sdx_0"
     0x00000002: ".dmx",    # this container was found on Zone of the Enders HD Remaster
 	0x00000003: ".nrm",
-    0x00000004: ".pacb",   # has "PACB" magic not seen in any of the original versions the HD remaster was based on
-    0x00000005: ".dmx2",    # ditto
+    0x00000004: ".cap",    # has "PACB" magic not seen in any of the original versions the HD remaster was based on
+    0x00000005: ".dmx2",   # motion data
     0x00000006: ".bpx",    
     0x0000000c: ".pac",    # XBOX version of MGS2 - MPEG2 video format
     0x0000000d: ".pac",    # XBOX version of MGS2 - MPEG2 video format
-	0x0000000e: ".pss",    # PS2 version of MGS2 - MPEG2 video format
+	0x0000000e: ".pss",    # PS2 version of MGS2 - MPEG2 video format (m2v?)
 	0x0000000f: ".ipu",    # PS2 version of MGS2 - MPEG2 video format
     0x00000020: ".m2v",    # this container is present even on all versions of the HD remaster(PS3, XBOX360, PSVITA), regardless of format
-    0x00010001: ".sdx_1",
+    0x00010001: ".ac3",
 	0x00010004: ".sub_en", # it's a made-up container, becuase in the executable of those Metal Gear Solid PS2 games there's no indication of a container used for these formats
-    0x00020001: ".sdx_2",
+    0x00020001: ".vag",
 	0x00020004: ".sub_fr", # ditto
     0x00030001: ".msf",    # PS3 HD remaster audio format
 	0x00030004: ".sub_de", # ditto
 	0x00040001: ".xwma",   # XBOX360 HD remaster audio format
 	0x00040004: ".sub_it", # ditto
-	0x00050001: ".9tav",   # PSVITA HD remaster audio format
+	0x00050001: ".at9",    # PSVITA HD remaster audio format
 	0x00050004: ".sub_es", # ditto
 	0x00060004: ".sub_jp", # ditto
 	0x00070004: ".sub_jp", # ditto
-    0x00100001: ".vag",    # VAG1/VAG2 format
+    0x00100001: ".stv",
     0x00110001: ".mtaf",   # MTAF format
 }
 
